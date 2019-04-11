@@ -121,7 +121,7 @@ const File = async function* ({
                 append = true;
             } else if (child.type === File) {
                 const { props } = child;
-                for await (const { content } of new child.type({
+                for await (const { content } of child.type({
                     ...props,
                     folder_context,
                     template_context
@@ -209,7 +209,7 @@ const File = async function* ({
                 contents.push(child);
             } else if (child.type === File) {
                 const { props } = child;
-                for await (const { content, mode} of new child.type({
+                for await (const { content, mode} of child.type({
                     ...props,
                     append: !!props.name,
                     incremental: false,
