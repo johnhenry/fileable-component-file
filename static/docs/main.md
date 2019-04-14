@@ -180,21 +180,46 @@ const template = ()=><File src='../src/index.js' name='index.js' cmd='|./minify-
 </File>;
 ```
 
-#### HTML Content
 
-[React's HTML tags](https://react-cn.github.io/react/docs/tags-and-attributes.html) can be used to produce a file's content.
+#### File Attribute: react_renderer
+
+By default, [React's HTML tags](https://react-cn.github.io/react/docs/tags-and-attributes.html) can be used to produce a file's content.
 
 ```javascript
 const template = ()=> <File name="index.html">
     &lt;!doctype html&gt;
     <html>
-        <Head />
         <body> Hello World
             <script src='index.js'></script>
         </body>
     </html>
 </File>;
 ```
+
+Adding the "react_renderer" allows you to customize how react componets are rendered.
+
+```javascript
+import repng from 'repng';
+const template = ()=> <File name="index.png" react_renderer={(component, props) => repng(component, { props, width: 162, height: 100 })}>
+    <html>
+        <style>{
+            `
+            * {
+                color: green;
+            }`
+        }</style>
+        <body> Hello World
+            <script src='index.js'></script>
+        </body>
+    </html>
+</File>;
+```
+
+
+
+
+
+
 ## API
 
 ### Table of contents
