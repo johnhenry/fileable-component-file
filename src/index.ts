@@ -3,6 +3,7 @@ import {exec, spawn} from 'child_process';
 import fetch from 'node-fetch';
 
 import ReactDOMServer from 'react-dom/server';
+import React from 'react';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { createHash } from 'crypto';
@@ -77,7 +78,7 @@ const File = async function* ({
     transform,
     doctype,
     content: content0,
-    react_renderer = ReactDOMServer.renderToStaticMarkup
+    react_renderer = (component, props) => ReactDOMServer.renderToStaticMarkup(React.createElement(component, props))
 }) {
     const children = Array.isArray(descendants)
         ? descendants
@@ -126,7 +127,8 @@ const File = async function* ({
             }
         }
         else {
-            contents.push(react_renderer(child));
+            const { props } = child;
+            contents.push(await react_renderer(child.type, props));
         }
     }
     if (content0) {

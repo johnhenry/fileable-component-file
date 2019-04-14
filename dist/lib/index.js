@@ -6,6 +6,7 @@ var fileableComponents = require('fileable-components');
 var child_process = require('child_process');
 var fetch = _interopDefault(require('node-fetch'));
 var ReactDOMServer = _interopDefault(require('react-dom/server'));
+var React = _interopDefault(require('react'));
 var fs = require('fs');
 var path = require('path');
 var crypto = require('crypto');
@@ -81,7 +82,7 @@ const File = async function* ({
     transform,
     doctype,
     content: content0,
-    react_renderer = ReactDOMServer.renderToStaticMarkup
+    react_renderer = (component, props) => ReactDOMServer.renderToStaticMarkup(React.createElement(component, props))
 }) {
     const children = Array.isArray(descendants)
         ? descendants
@@ -130,7 +131,8 @@ const File = async function* ({
             }
         }
         else {
-            contents.push(react_renderer(child));
+            const { props } = child;
+            contents.push(await react_renderer(child.type, props));
         }
     }
     if (content0) {
