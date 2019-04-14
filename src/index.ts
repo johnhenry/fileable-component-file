@@ -17,15 +17,9 @@ const ensureName = (name, content, extension = '') => {
 
 const remoteFileMatch = /^(?:(?:https?)|(?:ftp)):\/\//;
 
-const defaultOptions = {
-    format: 'utf-8',
-    template_context: ''
-};
-
 const externalFile = async (uri, {
-    format = defaultOptions.format,
-    template_context = defaultOptions.template_context
-} = defaultOptions) => {
+    template_context = ''
+}) => {
     if (uri.match(remoteFileMatch)) {
         return (await fetch(uri)).buffer();
     } else {
@@ -83,7 +77,8 @@ const File = async function* ({
     incremental = false,
     transform,
     doctype,
-    content: content0
+    content: content0,
+    react_renderer = ReactDOMServer.renderToStaticMarkup
 }) {
     const children = Array.isArray(descendants)
         ? descendants
@@ -137,7 +132,7 @@ const File = async function* ({
                     append = true;
                 }
             } else {
-                const content = ReactDOMServer.renderToStaticMarkup(child);
+                const content = react_renderer(child);
                 yield {
                     directive,
                     append,
@@ -239,7 +234,7 @@ const File = async function* ({
                 }
             }
             else {
-                contents.push(ReactDOMServer.renderToStaticMarkup(child));
+                contents.push(react_renderer(child));
             }
         }
         if (content0) {
