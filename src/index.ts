@@ -74,7 +74,6 @@ const File = async function* ({
     mode = 0o666,
     cmd,
     src,
-    incremental = false,
     transform,
     doctype,
     content: content0,
@@ -86,205 +85,98 @@ const File = async function* ({
             ? [descendants]
             : [];
     const directive = 'FILE';
-    if (incremental && !name || extension || transform || cmd) {
-        incremental = false;
-    }
-    if (incremental) {
-        if (doctype) {
-            const content = `<!doctype ${doctype}>`+'\n';
-            yield {
-                directive,
-                append,
-                content,
-                mode,
-                name,
-                folder_context
-            };
-            append = true;
-        }
-        for (const child of children) {
-            if (typeof child === 'string') {
-                const content = child;
-                yield {
-                    directive,
-                    append,
-                    content,
-                    mode,
-                    name,
-                    folder_context
-                };
-                append = true;
-            } else if (child.type === File) {
-                const { props } = child;
-                for await (const { content } of child.type({
-                    ...props,
-                    folder_context,
-                    template_context
-                })) {
-                    yield {
-                        directive,
-                        append,
-                        content,
-                        mode,
-                        name,
-                        folder_context
-                    };
-                    append = true;
-                }
-            } else {
-                const content = react_renderer(child);
-                yield {
-                    directive,
-                    append,
-                    content,
-                    mode,
-                    name,
-                    folder_context
-                };
-                append = true;
-            }
-        }
-        if (content0) {
-            const content = content0;
-            yield {
-                directive,
-                append,
-                content,
-                mode,
-                name,
-                folder_context
-            };
-            append = true;
-        }
-        if (src) {
-            const content = await externalFile(src, { template_context });
-            yield {
-                directive,
-                append,
-                content,
-                mode,
-                name,
-                folder_context
-            };
-            append = true;
-        }
-        if (cmd) {
-            const content = await runcmd(cmd);
-            yield {
-                directive,
-                append,
-                content,
-                mode,
-                name,
-                folder_context
-            };
-            append = true;
-        }
-        if (end) {
-            const content = end === true ? '\n' : end;
-            yield {
-                directive,
-                append,
-                content,
-                mode,
-                name,
-                folder_context
-            };
-            append = true;
-        }
-    } else {
-        const contents = [];
-        const postscripts = [];
-        let pipecmd;
-        if (doctype) {
-            contents.push(`<!doctype ${doctype}>` + '\n');
-        }
-        for (const child of children) {
-            if (typeof child === 'string') {
-                contents.push(child);
-            } else if (child.type === File) {
-                const { props } = child;
-                for await (const { content, mode} of child.type({
-                    ...props,
-                    append: !!props.name,
-                    incremental: false,
-                    folder_context,
-                    content: props.clone ? collapse(contents) : props.content,
-                    template_context,
-                })) {
-                    if (props.ps) {
-                        if (typeof props.ps === 'string') {
-                            if (props.name) {
-                                yield {
-                                    directive,
-                                    append:false,
-                                    content,
-                                    mode,
-                                    name: props.name,
-                                    folder_context
-                                };
-                            }
-                            postscripts.push(props.ps);
-                        } else {
-                            postscripts.push(content);
-                        }
-                    } else {
-                        contents.push(content);
-                    }
-                }
-            }
-            else {
-                contents.push(react_renderer(child));
-            }
-        }
-        if (content0) {
-            contents.push(content0);
-        }
-        if (src) {
-            contents.push(await externalFile(src, { template_context }));
-        }
-        if (cmd && (cmd = cmd.trim())) {
-            if (cmd[0] === '|') {
-                pipecmd = async (content) => await runcmd(cmd, content);
-                cmd = cmd.substring(1);
-            } else {
-                contents.push(await runcmd(cmd));
-            }
-        }
-        if (typeof transform === 'string') {
-            switch (transform) {
-                case 'JSON': {
-                    transform = transformFormatJSON;
-                } break;
-                case 'base64': {
-                    transform = transformBase64;
-                } break;
-                default : {
-                    transform = undefined;
-                } break;
-            }
-        }
-        transform = transform || identity;
-        pipecmd = pipecmd || identity;
-        if (end) {
-            const content = end === true ? '\n' : end;
-            postscripts.push(content);
-        }
-        const content = Buffer.concat(
-            [
-                await pipecmd(await transform(collapse(contents)))
-                , collapse(postscripts)
-            ]);
 
-        name = ensureName(name, content, extension);
-        yield {
-            directive,
-            append,
-            content,
-            mode,
-            name,
-            folder_context
-        };
+    const contents = [];
+    const postscripts = [];
+    let pipecmd;
+    if (doctype) {
+        contents.push(`<!doctype ${doctype}>` + '\n');
     }
+    for (const child of children) {
+        if (typeof child === 'string') {
+            contents.push(child);
+        } else if (child.type === File) {
+            const { props } = child;
+            for await (const { content, mode} of child.type({
+                ...props,
+                append: !!props.name,
+                folder_context,
+                content: props.clone ? collapse(contents) : props.content,
+                template_context,
+            })) {
+                if (props.ps) {
+                    if (typeof props.ps === 'string') {
+                        if (props.name) {
+                            yield {
+                                directive,
+                                append:false,
+                                content,
+                                mode,
+                                name: props.name,
+                                folder_context
+                            };
+                        }
+                        postscripts.push(props.ps);
+                    } else {
+                        postscripts.push(content);
+                    }
+                } else {
+                    contents.push(content);
+                }
+            }
+        }
+        else {
+            contents.push(react_renderer(child));
+        }
+    }
+    if (content0) {
+        contents.push(content0);
+    }
+    if (src) {
+        contents.push(await externalFile(src, { template_context }));
+    }
+    if (cmd && (cmd = cmd.trim())) {
+        if (cmd[0] === '|') {
+            pipecmd = async (content) => await runcmd(cmd, content);
+            cmd = cmd.substring(1);
+        } else {
+            contents.push(await runcmd(cmd));
+        }
+    }
+    if (typeof transform === 'string') {
+        switch (transform) {
+            case 'JSON': {
+                transform = transformFormatJSON;
+            } break;
+            case 'base64': {
+                transform = transformBase64;
+            } break;
+            default : {
+                transform = undefined;
+            } break;
+        }
+    }
+    transform = transform || identity;
+    pipecmd = pipecmd || identity;
+    if (end) {
+        const content = end === true ? '\n' : end;
+        postscripts.push(content);
+    }
+    const content = Buffer.concat(
+        [
+            await pipecmd(await transform(collapse(contents)))
+            , collapse(postscripts)
+        ]);
+
+    name = ensureName(name, content, extension);
+    yield {
+        directive,
+        append,
+        content,
+        mode,
+        name,
+        folder_context
+    };
+
 };
 export default createComponent(File);
