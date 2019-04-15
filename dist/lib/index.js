@@ -2,7 +2,6 @@
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
-var fileableComponents = require('fileable-components');
 var child_process = require('child_process');
 var fetch = _interopDefault(require('node-fetch'));
 var ReactDOMServer = _interopDefault(require('react-dom/server'));
@@ -185,6 +184,6 @@ const File = async function* ({
     };
 
 };
-var index = fileableComponents.createComponent(File);
+File['FILEABLE COMPONENT'] = true;
 
-module.exports = index;
+module.exports = File;

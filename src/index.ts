@@ -1,7 +1,5 @@
-import { createComponent } from 'fileable-components';
 import {exec, spawn} from 'child_process';
 import fetch from 'node-fetch';
-
 import ReactDOMServer from 'react-dom/server';
 import React from 'react';
 import { readFileSync } from 'fs';
@@ -181,4 +179,5 @@ const File = async function* ({
     };
 
 };
-export default createComponent(File);
+File['FILEABLE COMPONENT'] = true;
+export default File;
