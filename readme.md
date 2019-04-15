@@ -2,7 +2,7 @@
 
 # Fileable Component: File
 
-[fileable](https://github.com/isaacs/fileable) template component used to create files
+[Fileable](https://github.com/isaacs/fileable) template component used to create files
 
 ```javascript
 import {File} from 'fileable-component-file';
