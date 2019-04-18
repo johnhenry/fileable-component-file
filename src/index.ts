@@ -5,10 +5,14 @@ import React from 'react';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { createHash } from 'crypto';
+import iterator  from './iterator.ts';
 const identity = (_) => _;
-const collapse = contents => Buffer.concat(contents.map(Buffer.from));
+const collapse = contents => Buffer.concat(contents.map(buffer=>Buffer.isBuffer(buffer)? buffer : Buffer.from(String(buffer))));
 const ensureName = (name, content, extension = '') => {
     if (!name) {
+        content = Buffer.isBuffer(content)
+            ? content
+            : String(content);
         name = createHash('sha256').update(content).digest('hex');
     }
     return name + extension;
@@ -62,23 +66,27 @@ const runcmd = async (command, pipedContent=undefined) => new Promise((resolve, 
     }
 
 });
-const File = async function* ({
-    end = false,
-    name='',
-    folder_context = '',
-    template_context = '',
-    children: descendants,
-    append = false,
-    extension = '',
-    mode = 0o666,
-    cmd,
-    src,
-    transform,
-    doctype,
-    content: content0,
-    react_renderer = (component, props) => ReactDOMServer.renderToStaticMarkup(React.createElement(component, props))
-}) {
-    const children = Array.isArray(descendants)
+const File = async function* (opts) {
+    let {
+        end = false,
+        name = '',
+        folder_context = '',
+        template_context = '',
+        children: descendants,
+        append = false,
+        extension = '',
+        mode = 0o666,
+        cmd,
+        src,
+        transform,
+        sgmldoctype,
+        content: content0,
+        raw = false,
+        map,
+        react_renderer = (component, props) => ReactDOMServer.renderToStaticMarkup(React.createElement(component, props))
+    } = opts;
+
+    let children = Array.isArray(descendants)
         ? descendants
         : descendants
             ? [descendants]
@@ -88,13 +96,16 @@ const File = async function* ({
     const contents = [];
     const postscripts = [];
     let pipecmd;
-    if (doctype) {
-        contents.push(`<!doctype ${doctype}>` + '\n');
+    if (sgmldoctype) {
+        contents.push(`<!doctype ${sgmldoctype}>` + '\n');
     }
     for (const child of children) {
-        if (typeof child === 'string') {
+
+        if (typeof child === 'string' || typeof child === 'number') {
+            // Child is string or number
             contents.push(child);
         } else if (child.type === File) {
+            // Child is File
             const { props } = child;
             for await (const { content, mode} of child.type({
                 ...props,
@@ -124,9 +135,25 @@ const File = async function* ({
                 }
             }
         }
+        else if (child.type === Symbol.for('react.fragment') || typeof child === 'function') {
+
+            yield* iterator(child, {
+                folder_context,
+                template_context
+            });
+        }
         else {
-            const { props } = child;
-            contents.push(await react_renderer(child.type, props));
+
+            try {
+                const { props } = child;
+                contents.push(await react_renderer(child.type, props));
+            } catch({message}){
+                yield {
+                    directive: 'WARNING',
+                    messge: `${child} may not be rendered properly: ${message}`
+                };
+                contents.push(child);
+            }
         }
     }
     if (content0) {
@@ -162,9 +189,11 @@ const File = async function* ({
         const content = end === true ? '\n' : end;
         postscripts.push(content);
     }
+    map = map || identity;
+    const mappedContent = contents.map(map);
     const content = Buffer.concat(
         [
-            await pipecmd(await transform(collapse(contents)))
+            raw ? mappedContent : await pipecmd(await transform(collapse(mappedContent)))
             , collapse(postscripts)
         ]);
 

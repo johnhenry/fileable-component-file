@@ -16,8 +16,8 @@ If a file may contains other files, content will be concatinated.
 ```javascript
 const template = ()=><File name='readme.md'>
     # This is a sample file.
-    <File>## This is more content</File>
-    <File>## As is this</File>
+    <File>{'\n'}## This is more content</File>
+    <File>{'\n'}## As is this{'\n'}</File>
     ## This is the end
 </File>
 ```
@@ -92,12 +92,12 @@ console.log('hello world');
 </File>;
 ```
 
-### doctype
+### sgmldoctype
 
-Add a doctype preamble the mode of a file.
+Add a doctype to the beginning of an SGML file.
 
 ```javascript
-const template = ()=><File name='index.html' doctype='html'>
+const template = ()=><File name='index.html' sgmldoctype='html'>
 {`<html>
     <head></head>
     <body></body>
@@ -107,7 +107,7 @@ const template = ()=><File name='index.html' doctype='html'>
 
 ### transform
 
-Command will be transformed via given function
+Content will be transformed via given function
 
 ```javascript
 
@@ -117,6 +117,19 @@ ${content}`;
 
 const template = ()=><File transform={addBeginning}>
 // Middle
+</File>;
+```
+
+### raw
+
+Content is not transformed into a buffer.
+
+```javascript
+const template = ()=><File name='main.js' transform={(obj)=>JSON.stringify(obj)} >
+    <File raw>{{
+        name: 'Amy',
+        age: 25
+    }}</File>
 </File>;
 ```
 
@@ -174,6 +187,30 @@ const template = ()=><File src='../src/index.js' name='index.js' cmd='|./minify-
 </File>;
 ```
 
+
+
+### map
+
+Chlldren will be transformed via given function.
+
+
+```javascript
+const incrementAge = (person)=> {person.age += 1; return person;};
+const template = ()=><File name='main.js' map={incrementAge}>
+    <File raw>{{
+        name='Amy',
+        age:25
+    }}<File/>
+    <File raw>{{
+        name='Bob',
+        age:30
+    }}<File/>
+    <File raw>{{
+        name='Carl',
+        age:35
+    }}<File/>
+</File>;
+```
 
 ### react_renderer
 
