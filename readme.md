@@ -353,6 +353,3 @@ Iterator
 
 - remove unnecessary dependencies
 - add proper typescript typeings
-- components nested within File(s) do not current worly
- - this may require a recursive renderer outside of File
- - Will fileable.iterator work for this?
