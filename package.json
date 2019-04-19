@@ -25,6 +25,7 @@
   },
   "pre-commit": [
     "test",
+    "build-docs",
     "add-built"
   ],
   "keywords": [],

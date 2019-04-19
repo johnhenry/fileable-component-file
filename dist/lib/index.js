@@ -165,7 +165,7 @@ const File = async function* (opts) {
         if (typeof child === 'string' || typeof child === 'number') {
             // Child is string or number
             contents.push(child);
-        } else if (child.type === File) {
+        } else if (child && child.type === File) {
             // Child is File
             const { props } = child;
             for await (const { content, mode} of child.type({
@@ -196,7 +196,7 @@ const File = async function* (opts) {
                 }
             }
         }
-        else if (child.type === Symbol.for('react.fragment') || typeof child === 'function') {
+        else if (child && child.type === Symbol.for('react.fragment') || typeof child === 'function') {
 
             yield* iterator(child, {
                 folder_context,
