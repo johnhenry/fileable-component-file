@@ -5,7 +5,7 @@ import React from 'react';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { createHash } from 'crypto';
-import iterator  from './iterator.ts';
+import iterator from 'fileable-iterator';
 const identity = (_) => _;
 const collapse = contents => Buffer.concat(contents.map(buffer=>Buffer.isBuffer(buffer)? buffer : Buffer.from(String(buffer))));
 const ensureName = (name, content, extension = '') => {
