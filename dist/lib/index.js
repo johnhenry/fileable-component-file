@@ -8,6 +8,7 @@ var ReactDOMServer = _interopDefault(require('react-dom/server'));
 var React = _interopDefault(require('react'));
 var fs = require('fs');
 var path = require('path');
+var url = require('url');
 var crypto = require('crypto');
 
 /**
@@ -86,8 +87,8 @@ const externalFile = async (uri, {
 }) => {
     if (uri.match(remoteFileMatch)) {
         return (await fetch(uri)).buffer();
-    } else if (uri.match(template_context)) {
-        return (await fetch(path.join(template_context, uri))).buffer();
+    } else if (template_context.match(remoteFileMatch)) {
+        return (await fetch(url.resolve(template_context, uri))).buffer();
     } else {
         return fs.readFileSync(path.join(template_context, uri));
     }
