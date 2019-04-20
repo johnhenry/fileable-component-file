@@ -86,6 +86,8 @@ const externalFile = async (uri, {
 }) => {
     if (uri.match(remoteFileMatch)) {
         return (await fetch(uri)).buffer();
+    } else if (uri.match(template_context)) {
+        return (await fetch(path.join(template_context, uri))).buffer();
     } else {
         return fs.readFileSync(path.join(template_context, uri));
     }
