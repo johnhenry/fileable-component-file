@@ -53,10 +53,31 @@ File content in src attribute will be appended to child content.
 const template = ()=><File src='https://www.google.com'>Google's Home Page:</File>;
 ```
 
-If src location is a local file, it is treated as so relative to given template context.
+
+### src_context
+
+Relative sources are, by default, resolved relative to the template location.
 
 ```javascript
 const template = ()=><File src='./sibbling-of-template'/>;
+```
+
+Setting src_content to 'File.SRC_CONTEXT_FOLDER' will resolve the file relative to the destination folder.
+
+```javascript
+const template = ()=><File src='./sibbling-of-template' src_context={File.SRC_CONTEXT_FOLDER}/>;
+```
+
+You may also set src_context to a string.
+
+```javascript
+const template = ()=><File src='./bashrc' src_context='~'/>;
+```
+
+Defaults to 'File.SRC_CONTEXT_TEMPLATE'
+
+```javascript
+const template = ()=><File src='./sibbling-of-template' src_context={File.SRC_CONTEXT_TEMPLATE}/>;
 ```
 
 ### cmd

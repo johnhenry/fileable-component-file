@@ -21,14 +21,14 @@ const ensureName = (name, content, extension = '') => {
 const remoteFileMatch = /^(?:(?:https?)|(?:ftp)):\/\//;
 
 const externalFile = async (uri, {
-    template_context = ''
+    context = ''
 }) => {
     if (uri.match(remoteFileMatch)) {
         return (await fetch(uri)).buffer();
-    } else if (template_context.match(remoteFileMatch)) {
-        return (await fetch(join(template_context, uri).replace(':/', '://'))).buffer();
+    } else if (context.match(remoteFileMatch)) {
+        return (await fetch(join(context, uri).replace(':/', '://'))).buffer();
     } else {
-        return readFileSync(join(template_context, uri));
+        return readFileSync(join(context, uri));
     }
 };
 
@@ -68,12 +68,17 @@ const runcmd = async (command, pipedContent=undefined) => new Promise((resolve, 
     }
 
 });
+
+const SRC_CONTEXT_FOLDER = Symbol('SRC_CONTEXT_FOLDER');
+const SRC_CONTEXT_TEMPLATE = Symbol('SRC_CONTEXT_TEMPLATE');
+
 const File = async function* (opts) {
     let {
         end = false,
         name = '',
         folder_context = '',
         template_context = '',
+        src_context = SRC_CONTEXT_TEMPLATE,
         children: descendants,
         append = false,
         extension = '',
@@ -162,7 +167,14 @@ const File = async function* (opts) {
         contents.push(content0);
     }
     if (src) {
-        contents.push(await externalFile(src, { template_context }));
+        const context = src_context === SRC_CONTEXT_FOLDER
+            ? folder_context
+            : SRC_CONTEXT_TEMPLATE
+                ? template_context
+                : src_context;
+
+        contents.push(await externalFile(src, {
+            context}));
     }
     if (cmd && (cmd = cmd.trim())) {
         if (cmd[0] === '|') {
@@ -210,5 +222,7 @@ const File = async function* (opts) {
     };
 
 };
+File.SRC_CONTEXT_FOLDER = SRC_CONTEXT_FOLDER;
+File.SRC_CONTEXT_TEMPLATE = SRC_CONTEXT_TEMPLATE;
 File['FILEABLE COMPONENT'] = true;
 export default File;
